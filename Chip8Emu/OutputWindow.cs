@@ -15,7 +15,7 @@ namespace Chip8Emu
         public OutputWindow()
         {
             InitializeComponent();
-            chip8Control1.Scale = 4;
+            chip8Control1.ScreenScale = 4;
         }
 
         public Chip8Control Chip8Control { get { return chip8Control1; } }
@@ -33,27 +33,27 @@ namespace Chip8Emu
 
         private void xToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            chip8Control1.Scale = 1;
+            chip8Control1.ScreenScale = 1;
         }
 
         private void xToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            chip8Control1.Scale = 2;
+            chip8Control1.ScreenScale = 2;
         }
 
         private void xToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            chip8Control1.Scale = 4;
+            chip8Control1.ScreenScale = 4;
         }
 
         private void xToolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            chip8Control1.Scale = 8;
+            chip8Control1.ScreenScale = 8;
         }
 
         private void xToolStripMenuItem4_Click(object sender, EventArgs e)
         {
-            chip8Control1.Scale = 16;
+            chip8Control1.ScreenScale = 16;
         }
     }
 }

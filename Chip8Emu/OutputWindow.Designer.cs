@@ -112,7 +112,7 @@
             this.chip8Control1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chip8Control1.Location = new System.Drawing.Point(0, 24);
             this.chip8Control1.Name = "chip8Control1";
-            this.chip8Control1.Scale = 4;
+            this.chip8Control1.ScreenScale = 4;
             this.chip8Control1.Size = new System.Drawing.Size(391, 253);
             this.chip8Control1.TabIndex = 0;
             this.chip8Control1.Text = "chip8Control1";

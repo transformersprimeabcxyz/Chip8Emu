@@ -56,7 +56,6 @@ namespace Chip8Emu.Core
                 }
             }
             return new Chip8OpCode(Chip8OpCodeName.Unknown, 0, 0, (c, v) => { });
-//            throw new BadImageFormatException(string.Format("Invalid or not supported opcode {0:X4}.", value));
         }
 
         private ushort ReadUInt16(uint address)

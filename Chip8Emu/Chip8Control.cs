@@ -33,7 +33,7 @@ namespace Chip8Emu
 
         private System.Windows.Forms.Timer _refreshTimer;
         private int _scale;
-        private Point _smallest = new Point(100, 100), _largest = new Point(-1, -1);//, _lastsmallest = new Point(100, 100), _lastlargest = new Point(-1, -1);
+        private Point _smallest = new Point(100, 100), _largest = new Point(-1, -1);
         private bool _canRefresh = true;
         public bool[,] _pixels;
 
@@ -41,7 +41,7 @@ namespace Chip8Emu
 
         public Chip8Control()
         {
-            Scale = 4;
+            ScreenScale = 4;
             _refreshTimer = new System.Windows.Forms.Timer();
             _refreshTimer.Interval = 10;
             _refreshTimer.Tick += _refreshTimer_Tick;
@@ -50,13 +50,7 @@ namespace Chip8Emu
             _keyMapping = CreateKeyMapping();
         }
 
-        public void ClearScreen()
-        {
-            _pixels = new bool[64 + 1, 32 + 1];
-            Invalidate();
-        }
-
-        public int Scale 
+        public int ScreenScale 
         {
             get { return _scale; }
             set 
@@ -67,8 +61,13 @@ namespace Chip8Emu
             }
         }
 
-        public Size Resolution { get { return new Size((int)(64 * Scale), (int)(32 * Scale)); } }
+        public Size Resolution { get { return new Size((int)(64 * ScreenScale), (int)(32 * ScreenScale)); } }
 
+        public void ClearScreen()
+        {
+            _pixels = new bool[64 + 1, 32 + 1];
+            Invalidate();
+        }
 
         public void DrawSprite(byte x, byte y, byte[] rows)
         {
@@ -99,7 +98,7 @@ namespace Chip8Emu
                 }
             }
 
-            Invalidate(new Rectangle(x * Scale, y * Scale, 8 * Scale, rows.Length * Scale));
+            Invalidate(new Rectangle(x * ScreenScale, y * ScreenScale, 8 * ScreenScale, rows.Length * ScreenScale));
             _canRefresh = true;
         }
 
@@ -129,7 +128,7 @@ namespace Chip8Emu
                 {
                     if (_pixels[x, y])
                     {
-                        e.Graphics.FillRectangle(Brushes.White, x * Scale, y * Scale, Scale, Scale);
+                        e.Graphics.FillRectangle(Brushes.White, x * ScreenScale, y * ScreenScale, ScreenScale, ScreenScale);
                     }
                 }
             }
@@ -193,27 +192,14 @@ namespace Chip8Emu
                 new KeyData(Keys.NumPad7),   // 7
                 new KeyData(Keys.NumPad8),   // 8
                 new KeyData(Keys.NumPad9),   // 9
-                new KeyData(Keys.Home),    // A
-                new KeyData(Keys.End),  // B
-                new KeyData(Keys.PageUp),  // C
-                new KeyData(Keys.PageDown),       // D
-                new KeyData(Keys.Subtract),     // E
-                new KeyData(Keys.Add),    // F
+                new KeyData(Keys.Home),      // A
+                new KeyData(Keys.End),       // B
+                new KeyData(Keys.PageUp),    // C
+                new KeyData(Keys.PageDown),  // D
+                new KeyData(Keys.Subtract),  // E
+                new KeyData(Keys.Add),       // F
 
             };
-        }
-
-        private T[] CloneArray<T>(T[] array)
-        {
-            if (array[0] is ICloneable)
-            {
-                T[] newArray = new T[array.Length];
-                for (int i = 0; i < array.Length; i++)
-                    newArray[i] = (T)((ICloneable)array[i]).Clone();
-                return newArray;
-            }
-            else
-                return array.Clone() as T[];
         }
     }
 }
