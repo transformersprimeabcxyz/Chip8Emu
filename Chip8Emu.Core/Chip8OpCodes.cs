@@ -88,10 +88,10 @@ namespace Chip8Emu.Core
             ushort result = (ushort)(cpu.V[value.GetHDigit(1)] + cpu.V[value.GetHDigit(2)]);
             
             // set carry flag.
-            cpu.V[0xF] = result > byte.MaxValue ? (byte)1 : (byte)0;
+            cpu.V[0xF] = Convert.ToByte(result > byte.MaxValue);
 
-            // add
-            cpu.V[value.GetHDigit(1)] += cpu.V[value.GetHDigit(2)];
+            // safely set result.
+            cpu.V[value.GetHDigit(1)] = (byte)(result & 0xFF);
         });
        
         public static readonly Chip8OpCode SubVyFromVx = new Chip8OpCode(Chip8OpCodeName.SubVyFromVx, 0x8005, 0x0FF0, (cpu, value) =>
@@ -99,10 +99,11 @@ namespace Chip8Emu.Core
             // calculate result.
             short result = (short)(cpu.V[value.GetHDigit(1)] - cpu.V[value.GetHDigit(2)]);
 
-            // set carry flag.
-            cpu.V[0xF] = result < 0? (byte)1 : (byte)0;
+            // set borrow flag.
+            cpu.V[0xF] = Convert.ToByte(result >= 0);
 
-            cpu.V[value.GetHDigit(1)] -= cpu.V[value.GetHDigit(2)];
+            // safely set result.
+            cpu.V[value.GetHDigit(1)] = (byte)(result & 0xFF);
         });
        
         public static readonly Chip8OpCode ShiftRightVx = new Chip8OpCode(Chip8OpCodeName.ShiftRightVx, 0x8006, 0x0FF0, (cpu, value) =>
@@ -114,14 +115,21 @@ namespace Chip8Emu.Core
         });
        
         public static readonly Chip8OpCode SetVxToVyMinVx = new Chip8OpCode(Chip8OpCodeName.SetVxToVyMinVx, 0x8007, 0x0FF0, (cpu, value) =>
-        {
-            cpu.V[value.GetHDigit(1)] = (byte)(cpu.V[value.GetHDigit(2)] - cpu.V[value.GetHDigit(1)]);
+        {            
+            // calculate result.
+            short result = (short)(cpu.V[value.GetHDigit(2)] - cpu.V[value.GetHDigit(1)]);
+
+            // set borrow flag.
+            cpu.V[0xF] = Convert.ToByte(result >= 0);
+
+            // safely set result.
+            cpu.V[value.GetHDigit(1)] = (byte)(result & 0xFF);
         });
        
         public static readonly Chip8OpCode ShiftLeftVx = new Chip8OpCode(Chip8OpCodeName.ShiftLeftVx, 0x800E, 0x0FF0, (cpu, value) =>
         {
             // set flag to most significant bit
-            cpu.V[0xF] = (byte)((cpu.V[value.GetHDigit(1)] >> 7) & 1);
+            cpu.V[0xF] = (byte)(cpu.V[value.GetHDigit(1)] >> 7);
 
             cpu.V[value.GetHDigit(1)] <<= 1;
         });
@@ -149,7 +157,10 @@ namespace Chip8Emu.Core
         
         public static readonly Chip8OpCode DrawSprite = new Chip8OpCode(Chip8OpCodeName.DrawSprite, 0xD000, 0x0FFF, (cpu, value) => 
         {
-            cpu.Graphics.DrawSprite(cpu.V[value.GetHDigit(1)], cpu.V[value.GetHDigit(2)], cpu.ReadBytes(cpu.I, value.GetHDigit(3)));
+            bool setCarryFlag;
+            cpu.Graphics.DrawSprite(cpu.V[value.GetHDigit(1)], cpu.V[value.GetHDigit(2)], cpu.ReadBytes(cpu.I, value.GetHDigit(3)), out setCarryFlag);
+
+            cpu.V[0xF] = Convert.ToByte(setCarryFlag);
         });
        
         public static readonly Chip8OpCode SkipIfKeyPressed = new Chip8OpCode(Chip8OpCodeName.SkipIfKeyPressed, 0xE09E, 0x0F00, (cpu, value) => 
@@ -186,7 +197,14 @@ namespace Chip8Emu.Core
 
         public static readonly Chip8OpCode AddVxToI = new Chip8OpCode(Chip8OpCodeName.AddVxToI, 0xF01E, 0x0F00, (cpu, value) => 
         {
-            cpu.I += cpu.V[value.GetHDigit(1)];
+            // calculate result.
+            ushort result = (ushort)(cpu.I + cpu.V[value.GetHDigit(1)]);
+
+            // set carry flag.
+            cpu.V[0xF] = Convert.ToByte(result > 0xFFF);
+
+            // set I.
+            cpu.I = result;
         });
 
         public static readonly Chip8OpCode SetIToCharVx = new Chip8OpCode(Chip8OpCodeName.SetIToCharVx, 0xF029, 0x0F00, (cpu, value) => 
@@ -197,13 +215,9 @@ namespace Chip8Emu.Core
         public static readonly Chip8OpCode StoreDecVxInMem = new Chip8OpCode(Chip8OpCodeName.StoreDecVxInMem, 0xF033, 0x0F00, (cpu, value) => 
         {
             byte valueToWrite = cpu.V[value.GetHDigit(1)];
-            string format = valueToWrite.ToString("000");
-            byte hundreds = byte.Parse(format[2].ToString());
-            byte tens = byte.Parse(format[1].ToString());
-            byte ones = byte.Parse(format[0].ToString());
-            cpu.Memory[cpu.I] =  hundreds;
-            cpu.Memory[cpu.I + 1] =  tens;
-            cpu.Memory[cpu.I + 2] =  ones;
+            cpu.Memory[cpu.I] = (byte)(valueToWrite / 100);
+            cpu.Memory[cpu.I + 1] =  (byte)((valueToWrite / 10) % 10);
+            cpu.Memory[cpu.I + 2] = (byte)(valueToWrite % 10);
         });
       
         public static readonly Chip8OpCode StoreV0ToVxInMem = new Chip8OpCode(Chip8OpCodeName.StoreV0InMemPlusVx, 0xF055, 0x0F00, (cpu, value) => 
@@ -212,6 +226,8 @@ namespace Chip8Emu.Core
             {
                 cpu.Memory[cpu.I + i] = cpu.V[i];
             }
+
+            //cpu.I += (ushort)(value.GetHDigit(1) + 1);
         });
 
         public static readonly Chip8OpCode FillV0ToVxWithMem = new Chip8OpCode(Chip8OpCodeName.FillV0ToVxWithMem, 0xF065, 0x0F00, (cpu, value) =>
@@ -219,7 +235,9 @@ namespace Chip8Emu.Core
             for (int i = 0; i < value.GetHDigit(1); i++)
             {
                 cpu.V[i] = cpu.Memory[cpu.I + i];
-            } 
+            }
+
+            //cpu.I += (ushort)(value.GetHDigit(1) + 1);
         });
 
     

@@ -69,9 +69,10 @@ namespace Chip8Emu
             Invalidate();
         }
 
-        public void DrawSprite(byte x, byte y, byte[] rows)
+        public void DrawSprite(byte x, byte y, byte[] rows, out bool setCarryFlag)
         {
             _canRefresh = false;
+            setCarryFlag = false;
             for (int row = 0; row < rows.Length; row++)
             {
                 for (int col = 0; col < 8; col++)
@@ -93,6 +94,8 @@ namespace Chip8Emu
                         if (yy > _largest.Y)
                             _largest.Y = yy;
 
+                        if (_pixels[xx, yy])
+                            setCarryFlag = true;
                         _pixels[xx, yy] = !_pixels[xx, yy];
                     }
                 }
